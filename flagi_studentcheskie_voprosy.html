@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Разминка: Красный или зелёный флаг? — студенческая версия</title>
+<style>
+:root{
+  --blue:#2457d6; --blue-dark:#173a8f; --green:#0f7a4a; --red:#c62828;
+  --bg:#eef2fb; --card:#fff; --line:#d5dff2; --text:#1e293b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:20px 14px 50px}
+.hero{background:linear-gradient(135deg,#2457d6,#173a8f);color:#fff;border-radius:18px;padding:26px 20px;text-align:center;margin-bottom:18px;box-shadow:0 8px 24px rgba(23,58,143,.18)}
+.hero h1{margin:0 0 8px;font-size:26px}
+.hero p{margin:0;opacity:.92}
+.rules{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.rule{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:7px 12px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 3px 12px rgba(15,23,42,.06)}
+.top{display:flex;justify-content:space-between;align-items:center;font-weight:bold;color:var(--blue-dark);margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.bar{height:12px;background:#e6ecf8;border-radius:999px;overflow:hidden;margin-bottom:16px}
+.fill{height:100%;width:0;background:linear-gradient(90deg,#60a5fa,#2457d6);transition:width .3s}
+.statement{font-size:20px;font-weight:bold;margin:10px 0 20px;min-height:84px;display:flex;align-items:center}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.buttons{grid-template-columns:1fr}}
+button{border:0;border-radius:14px;padding:20px 10px;font-size:17px;font-weight:bold;cursor:pointer;transition:.15s;color:#fff}
+button:hover{transform:translateY(-2px);filter:brightness(.96)}
+.red{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+.green{background:linear-gradient(135deg,#22c55e,#15803d)}
+.feedback{margin-top:16px;padding:14px;border-radius:12px;display:none;font-size:15px}
+.feedback.show{display:block}
+.feedback.ok{background:#e7f6ee;border:1px solid #b6e2c9;color:var(--green)}
+.feedback.bad{background:#fdecec;border:1px solid #f3b8b3;color:var(--red)}
+.next{margin-top:14px;background:var(--blue);color:#fff;border:0;border-radius:10px;padding:12px 20px;font-size:15px;font-weight:bold;cursor:pointer;display:none}
+.next:hover{filter:brightness(.95)}
+.final{display:none;text-align:center}
+.final h2{color:var(--blue-dark);margin:0 0 6px}
+.score{font-size:48px;font-weight:bold;color:var(--blue);margin:10px 0}
+.level{display:inline-block;padding:8px 14px;border-radius:999px;font-weight:bold;margin-bottom:12px}
+.level.high{background:#e7f6ee;color:var(--green)}
+.level.mid{background:#fff7e6;color:#a15c07}
+.level.low{background:#fdecec;color:var(--red)}
+.restart{margin-top:14px;background:#eef3ff;color:var(--blue-dark);border:1px solid #c7d7f8;border-radius:10px;padding:12px 18px;font-weight:bold;cursor:pointer}
+footer{text-align:center;color:#64748b;font-size:13px;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <h1>🚩 Красный или зелёный флаг?</h1>
+  <p>Студенческая версия: проверим, какие ситуации вы уже замечаете</p>
+  <div class="rules">
+    <div class="rule">🚩 Красный флаг — есть риск коррупции</div>
+    <div class="rule">✅ Зелёный флаг — правила соблюдены</div>
+  </div>
+</div>
+
+<div class="card" id="game">
+  <div class="top">
+    <span id="counter">Вопрос 1 / 10</span>
+    <span id="score">Верных ответов: 0</span>
+  </div>
+
+  <div class="bar"><div class="fill" id="fill"></div></div>
+
+  <div class="statement" id="statement"></div>
+
+  <div class="buttons">
+    <button class="red" onclick="answer('red')">🚩 Красный флаг</button>
+    <button class="green" onclick="answer('green')">✅ Зелёный флаг</button>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+  <button class="next" id="nextBtn" onclick="next()">Следующий вопрос →</button>
+</div>
+
+<div class="card final" id="final">
+  <h2>Твоя готовность к теме</h2>
+  <div class="score" id="finalScore">0 / 10</div>
+  <div class="level" id="level"></div>
+  <p id="finalText"></p>
+  <button class="restart" onclick="startGame()">Пройти ещё раз</button>
+</div>
+
+<footer>Разминка к уроку «Коррупция рядом: бытовая vs государственная»</footer>
+</div>
+
+<script>
+const questions = [
+  {
+    text:"Староста предлагает за небольшую сумму «договориться», чтобы группу не отправили на обязательное мероприятие.",
+    flag:"red",
+    ok:"Верно! Это красный флаг: староста не имеет права брать деньги за освобождение от обязанностей или менять общие правила для части группы.",
+    bad:"Это красный флаг. Даже небольшая сумма за «решение вопроса» создаёт систему, где правила зависят от личных договорённостей."
+  },
+  {
+    text:"На сайте колледжа заранее опубликованы критерии отбора на практику, сроки подачи документов и список мест.",
+    flag:"green",
+    ok:"Верно! Это зелёный флаг: понятные и открытые критерии уменьшают риск личного усмотрения.",
+    bad:"Это зелёный флаг. Когда правила, сроки и условия известны заранее, сложнее отдать место «своему» человеку."
+  },
+  {
+    text:"Одногруппник просит за 1 000 рублей «решить вопрос» с пропуском занятий через знакомого в деканате.",
+    flag:"red",
+    ok:"Верно! Это красный флаг: оплата за обход правил — коррупционный риск, даже если деньги передаются не сотруднику напрямую.",
+    bad:"Это красный флаг. Посредник не делает ситуацию законной: суть остаётся прежней — выгода за обход общих правил."
+  },
+  {
+    text:"После собрания группы студенты скидываются на кофе организатору мероприятия.",
+    flag:"green",
+    ok:"Верно! Это зелёный флаг: добровольная символическая благодарность без ожидания ответной услуги обычно не является коррупцией.",
+    bad:"Это зелёный флаг. Главное — нет требования, нет влияния на оценку или решение и нет ожидания особого отношения."
+  },
+  {
+    text:"Сотрудник общежития говорит: «Могу поставить тебя в очередь раньше, если принесёшь кофе и сладости».",
+    flag:"red",
+    ok:"Верно! Это красный флаг: сотрудник предлагает изменить порядок распределения мест за личную выгоду.",
+    bad:"Это красный флаг. Даже если это не деньги, услуга или подарок в обмен на решение — коррупционный риск."
+  },
+  {
+    text:"В электронном журнале видно, кто, когда и по какой причине изменил оценку или статус заявки.",
+    flag:"green",
+    ok:"Верно! Это зелёный флаг: журнал изменений делает действия прозрачными и затрудняет незаметную правку.",
+    bad:"Это зелёный флаг. История изменений — важный элемент контроля: видно, кто и когда повлиял на результат."
+  },
+  {
+    text:"На конкурсе на стипендию победителя выбирают «по личному решению директора», без опубликованных критериев.",
+    flag:"red",
+    ok:"Верно! Это красный флаг: отсутствие критериев создаёт пространство для произвола и favorites.",
+    bad:"Это красный флаг. Если непонятно, почему победил один человек, а другой нет, растёт риск несправедливого решения."
+  },
+  {
+    text:"Работодатель предлагает студенту официальную практику с договором, оплатой и понятными обязанностями.",
+    flag:"green",
+    ok:"Верно! Это зелёный флаг: практика по договору с понятными условиями — нормальный и законный вариант.",
+    bad:"Это зелёный флаг. Официальное оформление, понятные обязанности и оплата защищают права студента."
+  },
+  {
+    text:"Знакомый говорит: «Я знаю человека в приёмной комиссии, могу за деньги повлиять на список зачисленных».",
+    flag:"red",
+    ok:"Верно! Это красный флаг: попытка повлиять на зачисление за деньги — коррупционная схема, даже если обещание не выполнится.",
+    bad:"Это красный флаг. Предложение «купить» место или повлиять на решение — коррупционный риск независимо от результата."
+  },
+  {
+    text:"В колледже можно подать апелляцию, если студент не согласен с оценкой, а срок и порядок рассмотрения известны.",
+    flag:"green",
+    ok:"Верно! Это зелёный флаг: право на обжалование и понятная процедура защищают студента от произвола.",
+    bad:"Это зелёный флаг. Возможность обжаловать решение — важный элемент справедливой системы."
+  }
+];
+
+let current = 0;
+let score = 0;
+
+function startGame(){
+  current = 0;
+  score = 0;
+  document.getElementById("final").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  render();
+}
+
+function render(){
+  const q = questions[current];
+  document.getElementById("counter").textContent = `Вопрос ${current+1} / ${questions.length}`;
+  document.getElementById("score").textContent = `Верных ответов: ${score}`;
+  document.getElementById("fill").style.width = `${(current/questions.length)*100}%`;
+  document.getElementById("statement").textContent = q.text;
+
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback";
+  fb.innerHTML = "";
+  document.getElementById("nextBtn").style.display = "none";
+}
+
+function answer(choice){
+  const q = questions[current];
+  const correct = choice === q.flag;
+  if(correct) score++;
+
+  const fb = document.getElementById("feedback");
+  fb.className = "feedback show " + (correct ? "ok" : "bad");
+  fb.innerHTML = `<b>${correct ? "Верно!" : "Почти."}</b> ${correct ? q.ok : q.bad}`;
+
+  document.getElementById("score").textContent = `Верных ответов: ${score}`;
+  document.getElementById("nextBtn").style.display = "inline-block";
+}
+
+function next(){
+  current++;
+  if(current >= questions.length){
+    finish();
+  }else{
+    render();
+  }
+}
+
+function finish(){
+  document.getElementById("game").style.display = "none";
+  document.getElementById("final").style.display = "block";
+  document.getElementById("fill").style.width = "100%";
+
+  document.getElementById("finalScore").textContent = `${score} / ${questions.length}`;
+
+  const level = document.getElementById("level");
+  let text;
+
+  if(score >= 8){
+    level.className = "level high";
+    level.textContent = "Высокий стартовый уровень";
+    text = "Ты уже хорошо замечаешь ситуации, где правила могут быть заменены личными договорённостями. На уроке разберём более сложные случаи.";
+  }else if(score >= 5){
+    level.className = "level mid";
+    level.textContent = "Средний стартовый уровень";
+    text = "Ты замечаешь часть рисков, но некоторые ситуации всё ещё кажутся «нормальными». Сегодня уточним границы.";
+  }else{
+    level.className = "level low";
+    level.textContent = "Тема требует разбора";
+    text = "Это нормальный старт. Коррупция часто выглядит как обычная помощь или «решение вопроса». Сегодня научимся её распознавать.";
+  }
+
+  document.getElementById("finalText").textContent = text;
+}
+
+startGame();
+</script>
+</body>
+</html>
